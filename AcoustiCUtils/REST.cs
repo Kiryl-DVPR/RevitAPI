@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AcoustiCUtils;
+using AcoustiCUtils.Library;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
 
@@ -16,6 +17,8 @@ namespace REST
 {
     public static class Requests
     {
+
+        private static string Host = "http://158.160.77.34:3005/api/v1/calcQuantity";
 
         public static async Task<HttpResponseMessage> PostRequest(string address, List<Constr> content)
         {
@@ -75,5 +78,19 @@ namespace REST
 
 
         }
+
+        public static async Task<List<Product>> GetCaclcProduct(List<Constr> constr)
+        {
+
+            var postresponse = await PostRequest(Host, constr);
+
+            string jsonStringProduct = await postresponse.Content.ReadAsStringAsync(); // записываем содержимое файла в строковую переменную
+
+            var response = JsonConvert.DeserializeObject<Response>(jsonStringProduct); // информацию из строковой переносим в список обьектов
+
+            return response.data;
+        }
     }
+
+
 }

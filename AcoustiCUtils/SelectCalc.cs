@@ -39,13 +39,7 @@ namespace AcoustiCUtils
                 var task = Task.Run(async () =>
                 {
 
-                    var postresponse = await REST.Requests.PostRequest("http://158.160.77.34:3005/api/v1/calcQuantity", ConstrInfoPerType.elementInfo);
-
-                    string jsonStringProduct = await postresponse.Content.ReadAsStringAsync(); // записываем содержимое файла в строковую переменную
-
-                    var response = JsonConvert.DeserializeObject<Response>(jsonStringProduct); // информацию из строковой переносим в список обьектов
-
-                    var productList = response.data as List<Product>;
+                    var productList = await REST.Requests.GetCaclcProduct(ConstrInfoPerType.elementInfo);
 
                     dispatcher.BeginInvoke(new Action(() =>
                     {

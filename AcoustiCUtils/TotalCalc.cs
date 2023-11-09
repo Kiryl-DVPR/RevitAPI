@@ -25,7 +25,7 @@ namespace AcoustiCUtils
         {
             UIApplication uiapp = commandData.Application;//Обращаемся к приложению Revit
             UIDocument uidoc = uiapp.ActiveUIDocument; //Оращаемся к интерфейсу Revit
-            Document doc = uidoc.Document;//Обращаемся к документу
+            Document doc = uidoc.Document;//Обращаемся к проекту Revit
 
             var allElementsInDocList = new FilteredElementCollector(doc) //Сортирует все элементы в документе 
                .WhereElementIsNotElementType()
@@ -49,22 +49,16 @@ namespace AcoustiCUtils
                 var task = Task.Run(async () =>
                 {
 
-                    var postresponse = await REST.Requests.PostRequest("http://158.160.77.34:3005/api/v1/calcQuantity", ConstrInfoPerType.elementInfo);
+                    var productList = await REST.Requests.GetCaclcProduct(ConstrInfoPerType.elementInfo);
 
-                    string jsonStringProduct = await postresponse.Content.ReadAsStringAsync(); // записываем содержимое файла в строковую переменную
-
-                    var response = JsonConvert.DeserializeObject<Response>(jsonStringProduct); // информацию из строковой переносим в список обьектов
-
-                    var productList = response.data as List<Product>;
 
                     dispatcher.BeginInvoke(new Action(() =>
                     {
-                        window.UpdateListOfItems(productList);
+                        window.UpdateListOfItems(productList); 
                     }));
 
                 });
                 task.Wait();
-                //task.ConfigureAwait(true).Wait();
 
 
                 window.ShowDialog();
