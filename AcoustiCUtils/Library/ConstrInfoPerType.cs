@@ -1,11 +1,15 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
+using Floor = Autodesk.Revit.DB.Floor;
 
 namespace AcoustiCUtils
 {
@@ -23,6 +27,8 @@ namespace AcoustiCUtils
             elementInfo.Clear();
             constructionInfo.Clear();
 
+            
+
             foreach (Element element in _CodeListFilter)
             {
                 if (element is Wall wallAg)
@@ -38,7 +44,9 @@ namespace AcoustiCUtils
                     var lenZ = ((int)UnitUtils.ConvertFromInternalUnits(lenZ_.AsDouble(), UnitTypeId.Millimeters));
                     var area = ((int)UnitUtils.ConvertFromInternalUnits(area_.AsDouble(), UnitTypeId.SquareMeters));
 
-                    elementInfo.Add(new Constr() { Code = wallCode, LenX = lenX, LenZ = lenZ });
+                    var openings = GetOpenings(wallAg, doc); // Получаем лист с проймами
+
+                    elementInfo.Add(new Constr() { Code = wallCode, LenX = lenX, LenZ = lenZ, Openings = openings });
 
                     var ConstrRef = constructionInfo.Find((el) => el.Code == wallCode);
 
@@ -93,6 +101,64 @@ namespace AcoustiCUtils
                 }
             }
 
+        }
+
+        private static List<Opening> GetOpenings(Element element, Document doc)
+        {
+            IList<ElementId> IdOpeningListId = new List<ElementId>();
+
+            var openings = new List<Opening>();
+
+            if (element is Wall)
+            { 
+                IdOpeningListId = ((Wall)element).FindInserts(true, false, false, false);
+
+            }
+            if (element is Ceiling)
+            {
+                IdOpeningListId = ((Ceiling)element).FindInserts(true, false, false, false);
+            }
+            if (element is Floor)
+            {
+
+                IdOpeningListId = ((Floor)element).FindInserts(true, false, false, false);
+            }
+
+            foreach ( var id in IdOpeningListId)
+            {
+                var opening = doc.GetElement(id);
+
+                int? LengthHead;
+                int? LengthBotom;
+                int? area;
+                int width;
+                int length;
+
+
+                if(opening.get_Parameter(BuiltInParameter.INSTANCE_HEAD_HEIGHT_PARAM) != null || opening.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED) != null)
+                {
+                    LengthHead = ((int)UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.INSTANCE_HEAD_HEIGHT_PARAM).AsDouble(), UnitTypeId.Millimeters));
+                    LengthBotom = ((int)UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM).AsDouble(), UnitTypeId.Millimeters));
+                    area = ((int)UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble(), UnitTypeId.SquareMillimeters));
+                    length = (int)(LengthHead - LengthBotom);
+                    width = (int)(area / length);
+
+                }
+                else
+                {   var a = ((int)UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.WALL_USER_HEIGHT_PARAM).AsDouble(), UnitTypeId.Millimeters));
+                    area = a*a; width = a; length = (int)(a);
+                }
+
+                openings.Add(new Opening()
+                {
+                    Length = length,
+                    Width = width,
+                    Area = (int)area,
+                });
+
+            }
+
+            return openings;
         }
 
     }
