@@ -48,7 +48,7 @@ namespace AcoustiCUtils
 
                 var elementName = oElement.Name.ToString();
 
-                if (elementName.Contains("AG"))
+                if (elementName.Contains(code))
                 {
                     FilteredElementList.Add(oElement);
                     isElementsFound = true;

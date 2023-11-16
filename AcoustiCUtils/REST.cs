@@ -22,7 +22,6 @@ namespace REST
 
         public static async Task<HttpResponseMessage> PostRequest(string address, List<Constr> content)
         {
-            
 
             HttpClient client = new HttpClient();
 

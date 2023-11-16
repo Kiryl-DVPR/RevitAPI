@@ -44,7 +44,7 @@ namespace AcoustiCUtils
                     var lenZ = ((int)UnitUtils.ConvertFromInternalUnits(lenZ_.AsDouble(), UnitTypeId.Millimeters));
                     var area = ((int)UnitUtils.ConvertFromInternalUnits(area_.AsDouble(), UnitTypeId.SquareMeters));
 
-                    var openings = GetOpenings(wallAg, doc); // Получаем лист с проймами
+                    var openings = GetOpenings(wallAg, doc); // Получаем лист с проёмами
 
                     elementInfo.Add(new Constr() { Code = wallCode, LenX = lenX, LenZ = lenZ, Openings = openings });
 
@@ -62,8 +62,6 @@ namespace AcoustiCUtils
                         });
                     }
 
-                  
-
                     index++;
 
                 }
@@ -77,10 +75,31 @@ namespace AcoustiCUtils
                     var area_ = ceilingElement.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED);//Достаём свойства объекта (Площадь)
                     var area = ((int)UnitUtils.ConvertFromInternalUnits(area_.AsDouble(), UnitTypeId.SquareMillimeters));//Конвертация в "мм2"
 
+                    var openings = GetOpenings(ceilingElement, doc); // Получаем лист с проёмами
+
                     var perimeter_ = ceilingElement.get_Parameter(BuiltInParameter.HOST_PERIMETER_COMPUTED);//Достаём свойства объекта (Периметр)
                     var perimeter = ((int)UnitUtils.ConvertFromInternalUnits(perimeter_.AsDouble(), UnitTypeId.Millimeters));//Конвертация в "мм"
 
-                    elementInfo.Add(new Constr() { Code = ceilingCode, Area = area, Perimeter = perimeter });//Добавляем свойства в список свойств
+                    elementInfo.Add(new Constr() { Code = ceilingCode, Area = area, Perimeter = perimeter, Openings = openings });//Добавляем свойства в список свойств
+
+                    var ConstrRef = constructionInfo.Find((el) => el.Code == ceilingCode);
+
+                    if (ConstrRef != null)
+                    {
+                        ConstrRef.Quantity += area;
+                    }
+                    else
+                    {
+                        constructionInfo.Add(new Construction()
+                        {
+                            Id = indexConstr++,
+                            Name = element.Name,
+                            Code = ceilingCode,
+                            Units = "м.кв.",
+                            Quantity = area,
+                            Weight = "20 кг/ед.",
+                        });
+                    }
 
                     index++;
 
@@ -95,7 +114,28 @@ namespace AcoustiCUtils
                     var area = ((int)UnitUtils.ConvertFromInternalUnits(area_.AsDouble(), UnitTypeId.Millimeters));
                     var perimeter = ((int)UnitUtils.ConvertFromInternalUnits(perimeter_.AsDouble(), UnitTypeId.Millimeters));
 
-                    elementInfo.Add(new Constr() { Code = floorCode, Area = area, Perimeter = perimeter });
+                    var openings = GetOpenings(floorAg, doc); // Получаем лист с проёмами
+
+                    elementInfo.Add(new Constr() { Code = floorCode, Area = area, Perimeter = perimeter, Openings = openings });
+
+                    var ConstrRef = constructionInfo.Find((el) => el.Code == floorCode);
+
+                    if (ConstrRef != null)
+                    {
+                        ConstrRef.Quantity += area;
+                    }
+                    else
+                    {
+                        constructionInfo.Add(new Construction()
+                        {
+                            Id = indexConstr++,
+                            Name = element.Name,
+                            Code = floorCode,
+                            Units = "м.кв.",
+                            Quantity = area,
+                            Weight = "20 кг/ед.",
+                        });
+                    }
 
                     index++;
                 }
@@ -116,12 +156,27 @@ namespace AcoustiCUtils
             }
             if (element is Ceiling)
             {
-                IdOpeningListId = ((Ceiling)element).FindInserts(true, false, false, false);
+                //IdOpeningListId = ((Ceiling)element).FindInserts(true, false, false, false);
+
+                openings.Add(new Opening()
+                {
+                    Length = 0,
+                    Width = 0,
+                    Area = 0,
+                });
             }
             if (element is Floor)
             {
+                //IdOpeningListId = ((Floor)element).FindInserts(true, false, false, false);
 
-                IdOpeningListId = ((Floor)element).FindInserts(true, false, false, false);
+                openings.Add(new Opening()
+                {
+                    Length = 0,
+                    Width = 0,
+                    Area = 0,
+                });
+
+                return openings;
             }
 
             foreach ( var id in IdOpeningListId)
@@ -133,7 +188,6 @@ namespace AcoustiCUtils
                 int? area;
                 int width;
                 int length;
-
 
                 if(opening.get_Parameter(BuiltInParameter.INSTANCE_HEAD_HEIGHT_PARAM) != null || opening.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED) != null)
                 {

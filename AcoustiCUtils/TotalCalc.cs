@@ -27,9 +27,9 @@ namespace AcoustiCUtils
             UIDocument uidoc = uiapp.ActiveUIDocument; //Оращаемся к интерфейсу Revit
             Document doc = uidoc.Document;//Обращаемся к проекту Revit
 
-            var allElementsInDocList = new FilteredElementCollector(doc) //Сортирует все элементы в документе 
+            var allElementsInDocList = new FilteredElementCollector(doc) //Сортирует все элементы в документе
+               //.WhereElementIsCurveDriven()
                .WhereElementIsNotElementType()
-               .WhereElementIsCurveDriven()
                .Cast<Element>()
                .ToList();
 
@@ -59,7 +59,6 @@ namespace AcoustiCUtils
 
                 });
                 task.Wait();
-
 
                 window.ShowDialog();
 
